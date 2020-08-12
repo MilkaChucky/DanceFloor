@@ -10,10 +10,10 @@ namespace DanceFloor.Api.Models
     {
         [DataMember]
         [BsonElement("email")]
-        public string Email { get; set; }
+        public override string Email { get; set; }
         
         [JsonIgnore]
         [BsonElement("passwordHash")]
-        public string PasswordHash { get; set; }
+        public override string PasswordHash { get; set; }
     }
 }

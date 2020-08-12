@@ -1,0 +1,18 @@
+<form #registerForm>
+  <mat-form-field>
+    <mat-label>Email</mat-label>
+    <input matInput name="email" type="email" [(ngModel)]="credentials.email">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Password</mat-label>
+    <input matInput name="password" type="password" [(ngModel)]="credentials.password">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Confirm password</mat-label>
+    <input matInput name="confirmPassword" type="password" #confirmPassword>
+    <mat-error *ngIf="credentials.password !== confirmPassword.value">Passwords do not match!</mat-error>
+  </mat-form-field>
+  <div>
+    <button mat-raised-button (click)="register()" [disabled]="registerForm.checkValidity()">Login</button>
+  </div>
+</form>

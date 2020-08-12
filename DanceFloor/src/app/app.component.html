@@ -1,10 +1,26 @@
-<div *ngIf="user">
-  <img src="{{ user.photoUrl }}" alt="Profile picture">
-  <div>
-    <h4>{{ user.name }}</h4>
-    <p>{{ user.email }}</p>
-  </div>
-</div>
-<button (click)="signInWithGoogle()">Sign in with Google</button>
-<button (click)="signInWithFacebook()">Sign in with Facebook</button>
-<button (click)="signOut()">Sign out</button>
+<mat-toolbar color="primary">
+  <button mat-fab (click)="sidenav.toggle()" (press)="sidenav.toggle()" style="margin: 1em">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>DanceFloor</span>
+</mat-toolbar>
+<mat-sidenav-container style="height: 100%">
+  <mat-sidenav #sidenav>
+    <a [routerLink]="'/login'">Login</a>
+    <a [routerLink]="'/register'">Register</a>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<!--<div *ngIf="user">-->
+<!--  <img src="{{ user.photoUrl }}" alt="Profile picture">-->
+<!--  <div>-->
+<!--    <h4>{{ user.name }}</h4>-->
+<!--    <p>{{ user.email }}</p>-->
+<!--  </div>-->
+<!--</div>-->
+<!--<button (click)="signInWithGoogle()">Sign in with Google</button>-->
+<!--<button (click)="signInWithFacebook()">Sign in with Facebook</button>-->
+<!--<button (click)="signOut()">Sign out</button>-->

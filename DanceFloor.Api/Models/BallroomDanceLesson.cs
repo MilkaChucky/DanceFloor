@@ -1,4 +1,5 @@
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -6,11 +7,10 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace DanceFloor.Api.Models
 {
     [DataContract]
-    public class SocialUser : User
+    public class BallroomDanceLesson : Lesson
     {
         [DataMember]
-        [Required]
-        [BsonElement("provider")]
-        public string Provider { get; set; }
+        [BsonElement("pairs")]
+        public List<List<string>> Pairs { get; set; }
     }
 }

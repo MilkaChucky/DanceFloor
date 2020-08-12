@@ -1,0 +1,19 @@
+<form>
+  <mat-form-field>
+    <mat-label>Email</mat-label>
+    <input matInput name="email" type="email" [(ngModel)]="credentials.email">
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Password</mat-label>
+    <input matInput name="password" type="password" [(ngModel)]="credentials.password">
+  </mat-form-field>
+  <div>
+    <button mat-raised-button (click)="login()">Login</button>
+    <button mat-mini-fab>
+      <mat-icon>google</mat-icon>
+    </button>
+    <button mat-mini-fab>
+      <mat-icon>facebook</mat-icon>
+    </button>
+  </div>
+</form>
