@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from "../../services/auth.service";
-import { Credentials } from "../../models/credentials";
-import { Router } from "@angular/router";
+import { AuthService } from '../../services/auth.service';
+import { Credentials } from '../../models/credentials';
+import { Router } from '@angular/router';
+import { tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -12,21 +13,41 @@ export class LoginComponent implements OnInit {
   credentials: Credentials;
 
   constructor(
-    private authService: AuthService,
-    private router: Router
+    private readonly router: Router,
+    private readonly authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.credentials = {
       email: '',
       password: ''
-    }
+    };
   }
 
-  login() {
+  login(): void {
     this.authService.login(this.credentials)
-      .subscribe(async result => {
-        await this.router.navigate(["/"]);
+      .subscribe(async () => {
+        await this.router.navigate(['/']);
+      });
+  }
+
+  loginGoogle(): void {
+    this.authService.loginGoogle()
+      .pipe(
+        tap(() => console.log('Logged in'))
+      )
+      .subscribe(async () => {
+        await this.router.navigate(['/']);
+      });
+  }
+
+  loginFacebook(): void {
+    this.authService.loginFacebook()
+      .pipe(
+        tap(() => console.log('Logged in'))
+      )
+      .subscribe(async () => {
+        await this.router.navigate(['/']);
       });
   }
 }

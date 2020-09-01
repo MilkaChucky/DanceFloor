@@ -11,11 +11,10 @@ namespace DanceFloor.Api.Models
 {
     [DataContract]
     [CollectionName("users")]
-    public class User : MongoIdentityUser<Guid>
+    public class User : MongoIdentityUser<ObjectId>
     {
-        // [DataMember]
-        // [BsonId]
-        // [BsonRepresentation(BsonType.String)]
-        // public override string Id { get; set; }
+        public string Name { get; set; }
+        public string GivenName { get; set; }
+        public string Surname { get; set; }
     }
 }

@@ -10,6 +10,6 @@ namespace DanceFloor.Api.Models
     {
         [DataMember]
         [BsonElement("dancers")]
-        public List<string> Dancers { get; set; }
+        public List<ObjectId> Dancers { get; set; }
     }
 }

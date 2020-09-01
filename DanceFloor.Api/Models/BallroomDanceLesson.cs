@@ -11,6 +11,6 @@ namespace DanceFloor.Api.Models
     {
         [DataMember]
         [BsonElement("pairs")]
-        public List<List<string>> Pairs { get; set; }
+        public List<List<ObjectId>> Pairs { get; set; }
     }
 }

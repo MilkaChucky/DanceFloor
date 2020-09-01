@@ -1,19 +1,19 @@
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using DanceFloor.Api.Extensions;
 using DanceFloor.Api.Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DanceFloor.Api.Controllers
 {
@@ -25,57 +25,89 @@ namespace DanceFloor.Api.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IConfiguration _configuration;
 
         public AuthController(
             ILogger<AuthController> logger,
             UserManager<User> userManager,
-            SignInManager<User> signInManager)
+            SignInManager<User> signInManager,
+            IConfiguration configuration)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
+            _configuration = configuration;
         }
-
-        [HttpGet("/login/social")]
-        public async Task<ActionResult> ExternalLoginCallback()
+        
+        [HttpPost("/login/external")]
+        public async Task<ActionResult> LoginExternal([FromHeader(Name = "ExternalLoginScheme")] string scheme)
         {
             try
             {
-                var info = await _signInManager.GetExternalLoginInfoAsync();
+                var info = await _signInManager.GetExternalLoginInfoAsync(scheme, null);
 
                 if (info == null)
-                    return Unauthorized(new {Reason = ""});
-
+                    return Unauthorized(new { Reason = "" });
+                
+                var expiration = info.AuthenticationProperties.GetParameter<int?>("Expiration") ?? 500;
+                var issuedAt = info.AuthenticationProperties.GetParameter<int?>("IssuedAt");
+                var notBefore = info.AuthenticationProperties.GetParameter<int?>("NotBefore");
+                var emailVerified = info.AuthenticationProperties.GetParameter<bool>("EmailVerified");
+                
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+                var givenName = info.Principal.FindFirstValue(ClaimTypes.GivenName);
+                var surname = info.Principal.FindFirstValue(ClaimTypes.Surname);
+
                 var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, false);
 
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByEmailAsync(email);
-                    return Ok(user);
+                    var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+
+                    user.Email = email;
+                    user.UserName = email.GetUntilOrEmpty('@');
+                    user.Name = name;
+                    user.GivenName = givenName;
+                    user.Surname = surname;
+                    user.EmailConfirmed = emailVerified;
+
+                    var identityResult = await _userManager.UpdateAsync(user);
+
+                    if (!identityResult.Succeeded)
+                        return Unauthorized(new { Reason = "" });
+                    
+                    var token = GenerateToken(user, expiration, issuedAt, notBefore);
+                    
+                    return Ok(new { Token = token });
                 }
                 else
                 {
                     var user = new User
                     {
                         Email = email,
-                        UserName = email.GetUntilOrEmpty('@')
+                        UserName = email.GetUntilOrEmpty('@'),
+                        Name = name,
+                        GivenName = givenName,
+                        Surname = surname,
+                        EmailConfirmed = emailVerified
                     };
 
                     var identityResult = await _userManager.CreateAsync(user);
 
-                    if (identityResult.Succeeded)
-                    {
-                        identityResult = await _userManager.AddLoginAsync(user, info);
+                    if (!identityResult.Succeeded)
+                        return Unauthorized(new { Reason = "" });
+                    
+                    identityResult = await _userManager.AddLoginAsync(user, info);
 
-                        if (identityResult.Succeeded)
-                        {
-                            await _signInManager.SignInAsync(user, false);
-                            return Created("/", user);
-                        }
-                    }
-                
-                    return Unauthorized(new {Reason = ""});
+                    if (!identityResult.Succeeded)
+                        return Unauthorized(new { Reason = "" });
+                    
+                    await _signInManager.SignInAsync(user, false);
+                            
+                    var token = GenerateToken(user, expiration, issuedAt, notBefore);
+                    
+                    return Created("/", new { Token = token });
                 }
             }
             catch (Exception ex)
@@ -93,7 +125,7 @@ namespace DanceFloor.Api.Controllers
                 var existing = await _userManager.FindByEmailAsync(credentials.Email);
 
                 if (existing != null)
-                    return BadRequest(new {Reason = "User is already registered!"});
+                    return BadRequest(new { Reason = "User is already registered!" });
                 
                 var user = new User
                 {
@@ -104,35 +136,16 @@ namespace DanceFloor.Api.Controllers
                 var result = await _userManager.CreateAsync(user, credentials.Password);
 
                 if (!result.Succeeded)
-                    return Ok(string.Join(",", result.Errors?.Select(error => error.Description) ?? Array.Empty<string>()));
+                    return BadRequest(new
+                    {
+                        Reason = string.Join(",", result.Errors?.Select(error => error.Description) ?? Array.Empty<string>())
+                    });
+
+                await _signInManager.SignInAsync(user, false);
                 
-                return Created("/", credentials);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Internal Server Error");
-                throw;
-            }
-        }
-
-        [HttpPost("/login/social")]
-        // [ValidateAntiForgeryToken]
-        public async Task<ActionResult> LoginSocial([Required] string provider)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(provider))
-                    return BadRequest(new {Reason = "The provider cannot be empty!"});
-            
-                var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-
-                if (schemes.All(scheme => scheme.Name != provider))
-                    return BadRequest(new {Reason = $"{provider} is not a supported external login provider!"});
-
-                var uri = Url.Action("ExternalLoginCallback");
-                var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, uri);
-            
-                return Challenge(properties, provider);
+                var token = GenerateToken(user, 5000, 0, 0);
+                
+                return Created("/", new { Token = token });
             }
             catch (Exception ex)
             {
@@ -149,14 +162,16 @@ namespace DanceFloor.Api.Controllers
                 var user = await _userManager.FindByEmailAsync(credentials.Email);
             
                 if (user == null)
-                    return Unauthorized(new {Reason="This email hasn't been registered!"});
+                    return Unauthorized(new { Reason="This email hasn't been registered!" });
 
                 var result = await _signInManager.PasswordSignInAsync(user, credentials.Password, false, false);
 
                 if (!result.Succeeded)
-                    return Unauthorized(new {Reason = "Invalid credentials!"});
-            
-                return Ok(user);
+                    return Unauthorized(new { Reason = "Invalid credentials!" });
+
+                var token = GenerateToken(user, 5000, 0, 0);
+                
+                return Ok(new { Token = token });
             }
             catch (Exception ex)
             {
@@ -178,6 +193,48 @@ namespace DanceFloor.Api.Controllers
                 _logger.LogError(ex, "Internal Server Error");
                 throw;
             }
+        }
+
+        private string GenerateToken(User user, int? expiration = null, int? issuedAt = null, int? notBefore = null)
+        {
+            var jwtSection = _configuration.GetSection("Jwt");
+            var key = Encoding.UTF8.GetBytes(jwtSection["Key"]);
+            var securityKey = new SymmetricSecurityKey(key);
+            
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                
+                Subject = new ClaimsIdentity(new []
+                {
+                    // new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
+                    // new Claim(ClaimTypes.Email, user.Email),
+                    // new Claim(ClaimTypes.Name, user.Name),
+                    // new Claim(ClaimTypes.GivenName, user.GivenName),
+                    // new Claim(ClaimTypes.Surname, user.Surname),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.NameId, user.Name),
+                    new Claim(JwtRegisteredClaimNames.GivenName, user.GivenName),
+                    new Claim(JwtRegisteredClaimNames.FamilyName, user.Surname),
+                }),
+                Claims = new Dictionary<string, object>
+                {
+                    [JwtRegisteredClaimNames.Iat] = issuedAt,
+                    [JwtRegisteredClaimNames.Exp] = expiration,
+                    [JwtRegisteredClaimNames.Nbf] = notBefore
+                },
+                Expires = expiration.HasValue ? DateTime.UtcNow.AddSeconds(expiration.Value) : (DateTime?)null,
+                IssuedAt = issuedAt.HasValue ? DateTime.UtcNow.AddSeconds(issuedAt.Value) : (DateTime?)null,
+                NotBefore = notBefore.HasValue ? DateTime.UtcNow.AddSeconds(notBefore.Value) : (DateTime?)null,
+                SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256),
+                Audience = jwtSection["Audience"],
+                Issuer = jwtSection["Issuer"]
+            };
+         
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            
+            return tokenHandler.WriteToken(token);
         }
     }
 }

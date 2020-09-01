@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="2.1.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.49.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="3.1.6" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="3.1.6" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.6" />
