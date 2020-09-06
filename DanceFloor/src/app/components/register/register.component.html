@@ -13,6 +13,6 @@
     <mat-error *ngIf="credentials.password !== confirmPassword.value">Passwords do not match!</mat-error>
   </mat-form-field>
   <div>
-    <button mat-raised-button (click)="register()" [disabled]="registerForm.checkValidity()">Login</button>
+    <button mat-raised-button (click)="register()" [disabled]="!credentials.password || credentials.password !== confirmPassword.value">Login</button>
   </div>
 </form>

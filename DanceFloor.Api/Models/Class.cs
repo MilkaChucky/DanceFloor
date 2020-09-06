@@ -7,18 +7,26 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace DanceFloor.Api.Models
 {
     [DataContract]
-    [BsonKnownTypes(typeof(DanceLesson), typeof(BallroomDanceLesson))]
-    [System.Text.Json.Serialization.JsonConverter(typeof(AsRuntimeTypeConverter<Lesson>))]
+    [BsonKnownTypes(typeof(GroupDanceClass), typeof(BallroomDanceClass))]
+    [System.Text.Json.Serialization.JsonConverter(typeof(AsRuntimeTypeConverter<Class>))]
     [BsonIgnoreExtraElements]
-    public abstract class Lesson
+    public abstract class Class
     {
         [DataMember]
         [BsonId]
         public ObjectId Id { get; set; }
         
         [DataMember]
+        [BsonElement("name")]
+        public string Name { get; set; }
+        
+        [DataMember]
         [BsonElement("teacher")]
         public ObjectId Teacher { get; set; }
+        
+        [DataMember]
+        [BsonElement("day_of_week")]
+        public DayOfWeek DayOfWeek { get; set; }
         
         [DataMember]
         [BsonElement("starts_at")]

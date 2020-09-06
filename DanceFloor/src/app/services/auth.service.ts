@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BaseService } from './base-service';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, from, concat, EMPTY } from 'rxjs';
 import { Credentials } from '../models/credentials';
-import { catchError, concatMap, tap } from 'rxjs/operators';
+import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { FacebookLoginProvider, GoogleLoginProvider, SocialAuthService } from 'angularx-social-login';
 import { TokenResponse } from '../models/token-response';
+import { TokenUserInfo } from '../models/token-user-info';
 
 enum ExternalLoginScheme {
   GoogleIdToken= 'IdToken.Google',
@@ -19,23 +20,45 @@ export class AuthService extends BaseService {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly socialAuthService: SocialAuthService) {
+    private readonly socialAuthService: SocialAuthService
+  ) {
     super();
+  }
+
+  public get currentUser(): TokenUserInfo {
+    const token = sessionStorage.getItem('token');
+    const jwtData = token.split('.')[1];
+    const decodedJwtJsonData = window.atob(jwtData);
+    const decodedJwtData = JSON.parse(decodedJwtJsonData);
+
+    return {
+      id: decodedJwtData.sub,
+      name: decodedJwtData.nameid,
+      email: decodedJwtData.email
+    };
+  }
+
+  public get loggedIn(): boolean {
+    return sessionStorage.getItem('token') !== null;
   }
 
   public login(credentials: Credentials): Observable<void> {
     if (sessionStorage.getItem('token')) {
-      return of<void>(null);
+      return EMPTY;
     }
 
     return this.http.post<TokenResponse>(`${this.backendUrl}/login`, credentials)
       .pipe(
-        tap(response => sessionStorage.setItem('token', response.token)),
+        map(response => sessionStorage.setItem('token', response.token)),
         catchError(this.handleError())
       );
   }
 
   public logout(): Observable<void> {
+    if (!sessionStorage.getItem('token')) {
+      return EMPTY;
+    }
+
     return this.http.post(`${this.backendUrl}/logout`, { })
       .pipe(
         tap(() => sessionStorage.removeItem('token')),
@@ -47,14 +70,14 @@ export class AuthService extends BaseService {
   public register(credentials: Credentials): Observable<void> {
     return this.http.post<TokenResponse>(`${this.backendUrl}/register`, credentials)
       .pipe(
-        tap(response => sessionStorage.setItem('token', response.token)),
+        map(response => sessionStorage.setItem('token', response.token)),
         catchError(this.handleError())
       );
   }
 
   private loginExternal(providerId: string, scheme: ExternalLoginScheme): Observable<void> {
     if (sessionStorage.getItem('token')) {
-      return of<void>(null);
+      return EMPTY;
     }
 
     return from(this.socialAuthService.signIn(providerId))
@@ -68,7 +91,7 @@ export class AuthService extends BaseService {
 
           return this.http.post<TokenResponse>(`${this.backendUrl}/login/external`, { }, { headers: httpHeader });
         }),
-        tap(response => sessionStorage.setItem('token', response.token)),
+        map(response => sessionStorage.setItem('token', response.token)),
         catchError(this.handleError())
       );
   }

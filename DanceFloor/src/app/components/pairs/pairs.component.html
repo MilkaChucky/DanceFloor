@@ -1,0 +1,12 @@
+<mat-list>
+  <mat-list-item *ngFor="let pair of pairs">
+    {{joinNames(pair)}}
+    <button mat-raised-button *ngIf="pair.length === 1 && !hasAlreadyApplied()"
+            (click)="apply(pair[0].id)"
+            style="margin-left: 1em">Apply</button>
+  </mat-list-item>
+  <mat-list-item>
+    <button mat-raised-button *ngIf="!hasAlreadyApplied()" (click)="apply()">Apply</button>
+    <button mat-raised-button *ngIf="hasAlreadyApplied()" (click)="cancel()">Cancel</button>
+  </mat-list-item>
+</mat-list>

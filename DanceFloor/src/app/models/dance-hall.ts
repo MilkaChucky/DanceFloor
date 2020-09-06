@@ -1,12 +1,12 @@
-import { Lesson } from './lesson';
-import { DanceLesson } from './dance-lesson';
-import { BallroomDanceLesson } from './ballroom-dance-lesson';
+import { DanceClass } from './dance-class';
+import { GroupDanceClass } from './group-dance-class';
+import { BallroomDanceClass } from './ballroom-dance-class';
 
-export type Lessons = (Lesson | DanceLesson | BallroomDanceLesson)[];
+export type DanceClasses = (DanceClass | GroupDanceClass | BallroomDanceClass)[];
 
 export interface DanceHall {
   id: string;
   address: string;
   room: string;
-  lessons: Lessons;
+  classes: DanceClasses;
 }

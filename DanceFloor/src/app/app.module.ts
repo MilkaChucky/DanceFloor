@@ -22,27 +22,37 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { AppRoutingModule } from './app-routing.module';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { TokenInterceptor } from './interceptors/token.interceptor';
+import { MatListModule } from '@angular/material/list';
+import { DanceClassesComponent } from './components/dance-classes/dance-classes.component';
+import { MatTableModule } from '@angular/material/table';
+import { DancersComponent } from './components/dancers/dancers.component';
+import { PairsComponent } from './components/pairs/pairs.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    RegisterComponent
+    RegisterComponent,
+    DanceClassesComponent,
+    DancersComponent,
+    PairsComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    FormsModule,
-    SocialLoginModule,
-    BrowserAnimationsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatToolbarModule,
-    MatSidenavModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        HttpClientModule,
+        FormsModule,
+        SocialLoginModule,
+        BrowserAnimationsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatToolbarModule,
+        MatSidenavModule,
+        MatListModule,
+        MatTableModule
+    ],
   providers: [
     {
       provide: 'SocialAuthServiceConfig',

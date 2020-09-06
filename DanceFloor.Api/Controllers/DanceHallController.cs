@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DanceFloor.Api.Models;
@@ -27,7 +28,15 @@ namespace DanceFloor.Api.Controllers
         [HttpGet("/dance_halls")]
         public ActionResult<IEnumerable<DanceHall>> GetAll()
         {
-            return _danceHalls.AsQueryable().ToList();
+            try
+            {
+                return _danceHalls.AsQueryable().ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetDanceHalls exception");
+                throw;
+            }
         }
     }
 }

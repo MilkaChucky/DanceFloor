@@ -126,11 +126,17 @@ namespace DanceFloor.Api.Controllers
 
                 if (existing != null)
                     return BadRequest(new { Reason = "User is already registered!" });
-                
+
+                var userName = credentials.Email.GetUntilOrEmpty('@');
+                var nameParts = userName.Split(' ');
                 var user = new User
                 {
+                    Name = userName,
                     Email = credentials.Email,
-                    UserName = credentials.Email.GetUntilOrEmpty('@')
+                    UserName = userName,
+                    Surname = nameParts.Skip(1).LastOrDefault() ?? "",
+                    GivenName = nameParts.SkipLast(1).Any() ?
+                        string.Join(' ', nameParts.SkipLast(1)) : userName
                 };
                 
                 var result = await _userManager.CreateAsync(user, credentials.Password);
@@ -186,7 +192,7 @@ namespace DanceFloor.Api.Controllers
             try
             {
                 await _signInManager.SignOutAsync();
-                return RedirectToRoute("/login");
+                return Ok();
             }
             catch (Exception ex)
             {

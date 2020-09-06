@@ -1,0 +1,52 @@
+<table mat-table [dataSource]="danceClasses" multiTemplateDataRows class="mat-elevation-z8">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Name</th>
+    <td mat-cell *matCellDef="let danceClass">{{danceClass.name}}</td>
+  </ng-container>
+  <ng-container matColumnDef="teacher">
+    <th mat-header-cell *matHeaderCellDef>Teacher</th>
+    <td mat-cell *matCellDef="let danceClass">{{danceClass.teacher.name}}</td>
+  </ng-container>
+  <ng-container matColumnDef="address">
+    <th mat-header-cell *matHeaderCellDef>Address</th>
+    <td mat-cell *matCellDef="let danceClass">{{danceClass.address}}</td>
+  </ng-container>
+  <ng-container matColumnDef="room">
+    <th mat-header-cell *matHeaderCellDef>Room</th>
+    <td mat-cell *matCellDef="let danceClass">{{danceClass.room}}</td>
+  </ng-container>
+  <ng-container matColumnDef="dayOfWeek">
+    <th mat-header-cell *matHeaderCellDef>Day</th>
+    <td mat-cell *matCellDef="let danceClass">{{dayOfWeekAsString(danceClass)}}</td>
+  </ng-container>
+  <ng-container matColumnDef="duration">
+    <th mat-header-cell *matHeaderCellDef>Duration</th>
+    <td mat-cell *matCellDef="let danceClass">{{timeIntervalAsString(danceClass)}}</td>
+  </ng-container>
+  <ng-container matColumnDef="dancers">
+    <th mat-header-cell *matHeaderCellDef>Number of dancers</th>
+    <td mat-cell *matCellDef="let danceClass">{{getNumberOfDancers(danceClass)}}</td>
+  </ng-container>
+  <ng-container matColumnDef="expandedDetail">
+    <td mat-cell *matCellDef="let danceClass" [attr.colspan]="displayedColumns.length">
+      <div [@detailExpand]="danceClass === expanded ? 'expanded' : 'collapsed'" class="example-element-detail">
+        <div *ngIf="danceClass.hasOwnProperty('dancers')">
+          <h2>Táncosok:</h2>
+          <app-dancers [danceClassId]="danceClass.id"
+                       [dancers]="danceClass.dancers"></app-dancers>
+        </div>
+        <div *ngIf="danceClass.hasOwnProperty('pairs')">
+          <h2>Párok:</h2>
+          <app-pairs [danceClassId]="danceClass.id"
+                     [pairs]="danceClass.pairs"></app-pairs>
+        </div>
+      </div>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+  <tr mat-row *matRowDef="let danceClass; columns: displayedColumns"
+           class="example-element-row"
+           [class.example-expanded-row]="expanded === danceClass"
+           (click)="expanded = expanded === danceClass ? null : danceClass"></tr>
+  <tr mat-row *matRowDef="let danceClass; columns: ['expandedDetail']" class="example-detail-row"></tr>
+</table>

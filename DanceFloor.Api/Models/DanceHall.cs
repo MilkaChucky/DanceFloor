@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -25,7 +23,7 @@ namespace DanceFloor.Api.Models
         public string Room { get; set; }
         
         [DataMember]
-        [BsonElement("lessons")]
-        public List<Lesson> Lessons { get; set; }
+        [BsonElement("classes")]
+        public List<Class> Classes { get; set; }
     }
 }

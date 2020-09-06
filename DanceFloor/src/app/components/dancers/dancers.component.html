@@ -1,0 +1,7 @@
+<mat-list>
+  <mat-list-item *ngFor="let dancer of dancers">{{dancer.name}}</mat-list-item>
+  <mat-list-item>
+    <button mat-raised-button *ngIf="!(hasAlreadyApplied())" (click)="apply()">Apply</button>
+    <button mat-raised-button *ngIf="hasAlreadyApplied()" (click)="cancel()">Cancel</button>
+  </mat-list-item>
+</mat-list>

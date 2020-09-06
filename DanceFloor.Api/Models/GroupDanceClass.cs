@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace DanceFloor.Api.Models
 {
     [DataContract]
-    public class DanceLesson : Lesson
+    public class GroupDanceClass : Class
     {
         [DataMember]
         [BsonElement("dancers")]
