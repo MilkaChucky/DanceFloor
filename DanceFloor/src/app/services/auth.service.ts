@@ -7,6 +7,7 @@ import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { FacebookLoginProvider, GoogleLoginProvider, SocialAuthService } from 'angularx-social-login';
 import { TokenResponse } from '../models/token-response';
 import { TokenUserInfo } from '../models/token-user-info';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 enum ExternalLoginScheme {
   GoogleIdToken= 'IdToken.Google',
@@ -17,12 +18,18 @@ enum ExternalLoginScheme {
   providedIn: 'root'
 })
 export class AuthService extends BaseService {
+  private externalLoggedIn: boolean;
 
   constructor(
     private readonly http: HttpClient,
-    private readonly socialAuthService: SocialAuthService
+    private readonly socialAuthService: SocialAuthService,
+    private readonly snackBar: MatSnackBar
   ) {
     super();
+
+    socialAuthService.authState.subscribe(user => {
+      this.externalLoggedIn = user !== null;
+    });
   }
 
   public get currentUser(): TokenUserInfo {
@@ -50,7 +57,7 @@ export class AuthService extends BaseService {
     return this.http.post<TokenResponse>(`${this.backendUrl}/login`, credentials)
       .pipe(
         map(response => sessionStorage.setItem('token', response.token)),
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 
@@ -62,8 +69,8 @@ export class AuthService extends BaseService {
     return this.http.post(`${this.backendUrl}/logout`, { })
       .pipe(
         tap(() => sessionStorage.removeItem('token')),
-        concatMap(() => from(this.socialAuthService.signOut())),
-        catchError(this.handleError())
+        concatMap(() => this.externalLoggedIn ? from(this.socialAuthService.signOut()) : EMPTY),
+        catchError(this.handleError(this.snackBar))
       );
   }
 
@@ -71,7 +78,7 @@ export class AuthService extends BaseService {
     return this.http.post<TokenResponse>(`${this.backendUrl}/register`, credentials)
       .pipe(
         map(response => sessionStorage.setItem('token', response.token)),
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 
@@ -92,7 +99,7 @@ export class AuthService extends BaseService {
           return this.http.post<TokenResponse>(`${this.backendUrl}/login/external`, { }, { headers: httpHeader });
         }),
         map(response => sessionStorage.setItem('token', response.token)),
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 

@@ -23,9 +23,14 @@ namespace DanceFloor.Api
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddConfiguration(configuration)
+                .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -56,7 +61,7 @@ namespace DanceFloor.Api
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    builder.WithOrigins("http://localhost:4200")
+                    builder.WithOrigins("http://localhost:4200", "http://localhost:8080")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
@@ -132,14 +137,39 @@ namespace DanceFloor.Api
 
                 });
 
-#if  DEBUG
+#if DEBUG
             var url = new MongoUrl(connectionString);
             var client = new MongoClient(url);
             var database = client.GetDatabase(url.DatabaseName);
+            var users = database.GetCollection<User>("users");
             var danceHalls = database.GetCollection<DanceHall>("dance_halls");
 
-            if (!danceHalls.AsQueryable().Any())
+            if (!users.AsQueryable().Any() || !danceHalls.AsQueryable().Any())
             {
+                var teacherIds = new[] { ObjectId.GenerateNewId(), ObjectId.GenerateNewId() };
+                
+                users.InsertMany(new []
+                {
+                    new User
+                    {
+                        Id = teacherIds[0],
+                        Name = "Test Teacher 1",
+                        Surname = "Test",
+                        GivenName = "Teacher 1",
+                        UserName = "TestTeacher1",
+                        Email = "test.teacher.1@gmail.com"
+                    },
+                    new User
+                    {
+                        Id = teacherIds[1],
+                        Name = "Test Teacher 2",
+                        Surname = "Test",
+                        GivenName = "Teacher 2",
+                        UserName = "TestTeacher2",
+                        Email = "test.teacher.2@gmail.com"
+                    }
+                });
+                
                 danceHalls.InsertOne(new DanceHall
                 {
                     Address = "6724 Szeged",
@@ -153,7 +183,7 @@ namespace DanceFloor.Api
                             DayOfWeek = DayOfWeek.Friday,
                             StartsAt = TimeSpan.FromHours(8),
                             EndsAt = TimeSpan.FromHours(10),
-                            Teacher = ObjectId.GenerateNewId(),
+                            Teacher = teacherIds[0],
                             Pairs = new List<List<ObjectId>>
                             {
                                 // new List<ObjectId> { ObjectId.GenerateNewId(), ObjectId.GenerateNewId() },
@@ -167,7 +197,7 @@ namespace DanceFloor.Api
                             DayOfWeek = DayOfWeek.Wednesday,
                             StartsAt = TimeSpan.FromHours(15),
                             EndsAt = TimeSpan.FromHours(17),
-                            Teacher = ObjectId.GenerateNewId(),
+                            Teacher = teacherIds[1],
                             Dancers = new List<ObjectId>
                             {
                                 // ObjectId.GenerateNewId(),
@@ -178,7 +208,6 @@ namespace DanceFloor.Api
                     }
                 });
             }
-            
 #endif
         }
 

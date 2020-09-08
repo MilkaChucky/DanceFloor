@@ -107,7 +107,7 @@ namespace DanceFloor.Api.Controllers
                             
                     var token = GenerateToken(user, expiration, issuedAt, notBefore);
                     
-                    return Created("/", new { Token = token });
+                    return Ok(new { Token = token });
                 }
             }
             catch (Exception ex)
@@ -151,7 +151,7 @@ namespace DanceFloor.Api.Controllers
                 
                 var token = GenerateToken(user, 5000, 0, 0);
                 
-                return Created("/", new { Token = token });
+                return Ok(new { Token = token });
             }
             catch (Exception ex)
             {

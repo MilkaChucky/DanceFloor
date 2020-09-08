@@ -4,13 +4,17 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { UserInfo } from '../models/user-info';
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService extends BaseService {
 
-  constructor(private readonly http: HttpClient) {
+  constructor(
+    private readonly http: HttpClient,
+    private readonly snackBar: MatSnackBar
+  ) {
     super();
   }
 
@@ -21,7 +25,7 @@ export class UserService extends BaseService {
 
     return this.http.get<UserInfo[]>(`${this.backendUrl}/userinfo`, { params })
       .pipe(
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 }

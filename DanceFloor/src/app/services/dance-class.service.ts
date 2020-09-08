@@ -10,6 +10,7 @@ import { DanceHall, DanceClasses } from '../models/dance-hall';
 import { DanceClass } from '../models/dance-class';
 import { UserInfo } from '../models/user-info';
 import { UserService } from './user.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +34,8 @@ export class DanceClassService extends BaseService {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly snackBar: MatSnackBar
   ) {
     super();
 
@@ -111,7 +113,7 @@ export class DanceClassService extends BaseService {
         tap(() => console.log('Trying to connect...')),
         retry(10),
         tap(() => console.log('Connection started')),
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 
@@ -123,7 +125,7 @@ export class DanceClassService extends BaseService {
     return from(this.hubConnection.stop())
       .pipe(
         tap(() => console.log('Connection closed')),
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 
@@ -147,7 +149,9 @@ export class DanceClassService extends BaseService {
           if ('dancers' in danceClass) {
             return danceClass.dancers as string[];
           } else if ('pairs' in danceClass) {
-            return danceClass.pairs.reduce((acc, val) => [...acc, ...val]) as string[];
+            return danceClass.pairs.length > 0 ?
+              danceClass.pairs.reduce((acc, val) => [...acc, ...val]) as string[] :
+              [] as string[];
           } else {
             return [] as string[];
           }
@@ -190,7 +194,7 @@ export class DanceClassService extends BaseService {
           concatMap(() => this.classes$)
         )
     ).pipe(
-      catchError(this.handleError())
+      catchError(this.handleError(this.snackBar))
     );
   }
 
@@ -199,7 +203,7 @@ export class DanceClassService extends BaseService {
       params: pairId ? { pairId } : { }
     })
       .pipe(
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
     // return this.openConnection()
     //   .pipe(
@@ -211,7 +215,7 @@ export class DanceClassService extends BaseService {
   public cancelApplication(classId: string): Observable<void> {
     return this.http.post<never>(`${this.backendUrl}/classes/${classId}/leave`, { })
       .pipe(
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
     // return this.openConnection()
     //   .pipe(

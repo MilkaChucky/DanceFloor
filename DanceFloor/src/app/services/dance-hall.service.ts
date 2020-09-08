@@ -4,20 +4,24 @@ import { catchError, map } from 'rxjs/operators';
 import { BaseService } from './base-service';
 import { HttpClient } from '@angular/common/http';
 import { DanceHall } from '../models/dance-hall';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DanceHallService extends BaseService {
 
-  constructor(private readonly http: HttpClient) {
+  constructor(
+    private readonly http: HttpClient,
+    private readonly snackBar: MatSnackBar
+  ) {
     super();
   }
 
   public danceHalls(): Observable<DanceHall[]> {
     return this.http.get<DanceHall[]>(`${this.backendUrl}/dance_halls`)
       .pipe(
-        catchError(this.handleError())
+        catchError(this.handleError(this.snackBar))
       );
   }
 }

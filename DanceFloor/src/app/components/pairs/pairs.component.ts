@@ -54,6 +54,10 @@ export class PairsComponent implements OnInit, DoCheck {
   hasAlreadyApplied(): boolean {
     const currentUser = this.authService.currentUser;
 
+    if (this.pairs.length <= 0) {
+      return false;
+    }
+
     return this.pairs
       .reduce((acc, val) => [...acc, ...val])
       .some(dancer => dancer.id === currentUser.id);

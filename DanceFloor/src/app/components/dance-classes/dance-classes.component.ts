@@ -41,7 +41,9 @@ export class DanceClassesComponent implements OnInit, AfterViewInit {
 
   getNumberOfDancers(danceClass: (DanceClass | GroupDanceClass | BallroomDanceClass)): number {
     if ('pairs' in danceClass) {
-      return danceClass.pairs.reduce((acc, val) => [...acc, ...val]).length;
+      return  danceClass.pairs.length > 0 ?
+        danceClass.pairs.reduce((acc, val) => [...acc, ...val]).length :
+        0;
     } else if ('dancers' in danceClass) {
       return danceClass.dancers.length;
     } else {

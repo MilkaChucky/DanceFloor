@@ -1,0 +1,44 @@
+version: '3'
+services: 
+    dance-floor-mongo:
+        image: mongo
+        ports:
+            - "27017:27017"
+        volumes:
+            - db:/data/db
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: on-failure
+                max_attempts: 5
+        networks:
+            - dance_floor
+    dance-floor-api:
+        build: ./DanceFloor.Api
+        ports: 
+            - "80:80"
+        environment: 
+            Jwt__Key: "${JWT__KEY:-ChlgC12iId8R1rGOjnh6vhnA6hfsKtKe9fmFD335RThO7JrbgaxWY72bN3SxaG6}"
+            ConnectionStrings__DanceFloor: "mongodb://dance-floor-mongo:27017/DanceFloor"
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: on-failure
+                max_attempts: 5
+        networks: 
+            - dance_floor
+    dance-floor:
+        build: ./DanceFloor
+        ports:
+            - "8080:80"
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: on-failure
+                max_attempts: 5
+        networks: 
+            - dance_floor
+networks:
+    dance_floor:
+volumes: 
+    db:

@@ -27,6 +27,7 @@ import { DanceClassesComponent } from './components/dance-classes/dance-classes.
 import { MatTableModule } from '@angular/material/table';
 import { DancersComponent } from './components/dancers/dancers.component';
 import { PairsComponent } from './components/pairs/pairs.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { PairsComponent } from './components/pairs/pairs.component';
         FormsModule,
         SocialLoginModule,
         BrowserAnimationsModule,
+        MatSnackBarModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
